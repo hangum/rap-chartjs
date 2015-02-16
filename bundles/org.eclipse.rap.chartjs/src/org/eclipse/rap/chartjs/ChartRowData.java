@@ -14,6 +14,7 @@ package org.eclipse.rap.chartjs;
 import static org.eclipse.rap.chartjs.ChartStyle.asCss;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import org.eclipse.rap.json.JsonArray;
@@ -23,7 +24,10 @@ import org.eclipse.rap.json.JsonObject;
 public class ChartRowData {
 
   private final String[] labels;
-  private final List<int[]> rows = new ArrayList<int[]>( 1 );
+  
+  private final List<int[]> intRows = new ArrayList<int[]>( 1 );
+  private final List<double[]> doubleRows = new ArrayList<double[]>( 1 );
+  
   private final List<ChartStyle> colors = new ArrayList<ChartStyle>( 1 );
 
   public ChartRowData( String[] labels ) {
@@ -31,7 +35,17 @@ public class ChartRowData {
   }
 
   public ChartRowData addRow( int[] row, ChartStyle colors ) {
-    rows.add( row );
+    intRows.add( row );
+    doubleRows.clear();
+    
+    this.colors.add( colors );
+    return this;
+  }
+  
+  public ChartRowData addRow( double[] row, ChartStyle colors ) {
+    doubleRows.add( row );
+    intRows.clear();
+    
     this.colors.add( colors );
     return this;
   }
@@ -40,16 +54,29 @@ public class ChartRowData {
     JsonObject result = new JsonObject();
     result.add( "labels" , asJson( labels ) );
     JsonArray rowsJson = new JsonArray();
-    for( int i = 0; i < rows.size(); i++ ) {
+    
+    for( int i = 0; i < intRows.size(); i++ ) {
       ChartStyle rowColors = colors.get( i );
       rowsJson.add( new JsonObject()
         .add( "fillColor", asCss( rowColors.getFillColor(), rowColors.getFillOpacity() ) )
         .add( "strokeColor", asCss( rowColors.getStrokeColor() ) )
         .add( "pointColor", asCss( rowColors.getPointColor() ) )
         .add( "pointStrokeColor", asCss( rowColors.getPointStrokeColor() ) )
-        .add( "data", asJson( rows.get( i ) ) )
+        .add( "data", asJson( intRows.get( i ) ) )
       );
     }
+    
+    for( int i = 0; i < doubleRows.size(); i++ ) {
+        ChartStyle rowColors = colors.get( i );
+        rowsJson.add( new JsonObject()
+          .add( "fillColor", asCss( rowColors.getFillColor(), rowColors.getFillOpacity() ) )
+          .add( "strokeColor", asCss( rowColors.getStrokeColor() ) )
+          .add( "pointColor", asCss( rowColors.getPointColor() ) )
+          .add( "pointStrokeColor", asCss( rowColors.getPointStrokeColor() ) )
+          .add( "data", asJson( doubleRows.get( i ) ) )
+        );
+      }
+    
     result.add( "datasets", rowsJson );
     return result;
   }
@@ -69,5 +96,13 @@ public class ChartRowData {
     }
     return result;
   }
+  
+  private JsonArray asJson( double... ints ) {
+	    JsonArray result = new JsonArray();
+	    for( int i = 0; i < ints.length; i++ ) {
+	      result.add( ints[ i ] );
+	    }
+	    return result;
+	  }
 
 }
